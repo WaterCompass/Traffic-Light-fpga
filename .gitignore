@@ -2,6 +2,7 @@
 sim.vvp
 *.vcd
 # Vivado command-line simulation output
+*.wdb
 xsim.dir/
 .Xil/
 *.log
