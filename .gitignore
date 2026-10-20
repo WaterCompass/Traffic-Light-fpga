@@ -1,0 +1,14 @@
+# Icarus simulation output
+sim.vvp
+*.vcd
+# Vivado command-line simulation output
+xsim.dir/
+.Xil/
+*.log
+*.jou
+*.pb
+webtalk*
+# Python
+__pycache__/
+# Mac
+.DS_Store
