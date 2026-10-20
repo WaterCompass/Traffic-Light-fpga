@@ -1,12 +1,16 @@
-# Traffic Light Controller (Verilog / FPGA)
+# Traffic Light Controller (Verilog / FPGA + Arduino)
 
 ![Tests](https://github.com/WaterCompass/Traffic-Light-fpga/actions/workflows/tests.yml/badge.svg)
 
-A traffic light controller for a two-road junction (North and East) with a pedestrian
-crossing, designed in Verilog as a finite state machine (FSM) and verified with a
-self-checking testbench. Tests run automatically on every push using GitHub Actions.
+A traffic light controller for a 4-way junction with a pedestrian crossing, designed in
+Verilog as a finite state machine (FSM) and verified with a self-checking testbench.
+Tests run automatically on every push using GitHub Actions. The same design is also
+built in C on an Arduino with real LEDs, to compare hardware and software approaches.
 
 ## What it does
+- Controls a 4-way junction where the north–south road and the east–west road take
+  turns. Opposite directions share the same signal, so two sets of outputs control all
+  four approaches.
 - 6 states: ALL_RED (safe reset), NORTH_GREEN, NORTH_AMBER, EAST_GREEN, EAST_AMBER, WALK
 - **Pedestrian button:** a press is remembered and served at the next safe point
   (straight after an amber), so a green is never cut short
@@ -51,6 +55,25 @@ during a WALK (ignored), and the reset at the end clearing a pending request (no
 
 ![Simulation waveform](Waveform.png)
 
+## Arduino version (software vs hardware)
+The same design written in C for an Arduino Uno, with real LEDs and a push button
+(`arduino/traffic_light/traffic_light.ino`). Same 6 states, same button rules, same
+safety checks. Blue LEDs are used in place of amber in my build.
+
+| | FPGA (Verilog) | Arduino (C) |
+|---|---|---|
+| How it runs | Everything updates in parallel on each clock tick | `loop()` runs one line at a time, over and over |
+| Timing | A counter counts clock ticks | `millis()` measures elapsed time |
+| Button | Its own circuit, always watching | Checked once each time round the loop |
+| Safety checks | In the testbench, every tick | Inside `setLights()`, before the LEDs change |
+| Testing | Automated testbench + CI | Manual tests + Serial Monitor |
+
+**What I learned:** using `delay()` on the Arduino would freeze the loop and miss
+button presses, so I used `millis()` instead. The FPGA never has this problem,
+because the hardware is always running in parallel.
+
+![Arduino build](arduino.jpg)
+
 ## Design decisions
 - **Button presses are latched** in `walk_requested`, so a quick press isn't missed.
 - **A press on the exact tick an amber ends** is served one cycle later rather than
@@ -71,12 +94,10 @@ during a WALK (ignored), and the reset at the end clearing a pending request (no
 - `tb/tb_traffic_light.v`: self-checking testbench (4 rules, 6 tests)
 - `run_tests.py`: runs the tests (Icarus or Vivado) and prints PASS/FAIL
 - `.github/workflows/tests.yml`: runs the tests automatically on every push
+- `arduino/traffic_light/traffic_light.ino`: the same design in C for an Arduino Uno
 
 ## Tools
-Verilog, Vivado 2023.2, Icarus Verilog, Python, GitHub Actions
-
-## Next steps
-- Same design on an Arduino (C), to compare software vs hardware approaches
+Verilog, Vivado 2023.2, Icarus Verilog, Python, GitHub Actions, Arduino (C)
 
 ## License
 © 2026 Ayub (WaterCompass). All rights reserved.
